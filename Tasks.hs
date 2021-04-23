@@ -201,19 +201,52 @@ get_exam_diff_table list = ["Nume", "Punctaj interviu", "Punctaj scris", "Difere
 -- Task Sets 2
 -- Read CSV
 read_csv :: CSV -> Table
-read_csv = undefined
+read_csv = map parseCsvLines . lines
+
+-- Functia prin care parsam csv-ul
+parseCsvLines :: String -> [String]
+-- ^Parses a single line of CSV data.
+parseCsvLines current = splitAux current
+
+-- Impartim dupa , si cream
+splitAux :: String -> [String]
+splitAux current = let (start, end) = break (== ',') current
+                    in start : if null end then [] else splitAux (tail end)
 
 
 -- Write CSV
+-- Functia prin care scriem csv-ul
 write_csv :: Table -> CSV
-write_csv = undefined
+write_csv [] = ""
+write_csv (x:xs) 
+                | xs == [] = write_line_last x ++ write_csv xs
+                | otherwise = write_line x ++ write_csv xs
 
+-- Scriem ultima linie din csv, fara newline
+write_line_last :: Row -> CSV
+-- write_line [] = "\n"
+write_line_last (x:xs)
+        | xs == [] = x
+        | otherwise = x ++ "," ++ write_line_last xs
 
+-- Scriem restul liniilor din csv, cu newline la sfarsit
+write_line :: Row -> CSV
+-- write_line [] = "\n"
+write_line (x:xs)
+        | xs == [] = x ++ "\n"
+        | otherwise = x ++ "," ++ write_line xs
 
 
 -- Task 1
+searchLine :: String -> Table -> [String]
+searchLine name (x:xs) 
+                    | name == (head x) = (tail x)
+                    | otherwise = searchLine name xs
+
+-- Functia prin care cautam un string in tabelul transpus
+-- Si returnam randul fara prima coloana, practic coloana fara primul rand
 as_list :: String -> Table -> [String]
-as_list = undefined
+as_list name table = searchLine name (transpose table)
 
 
 
@@ -235,10 +268,14 @@ rmap = undefined
 
 
 
+addTableToAnother :: Table -> Table -> Table
+addTableToAnother t1 t2 = foldr (\x y -> x:y) t1 t2
 
 -- Task 5
 vunion :: Table -> Table -> Table
-vunion = undefined
+vunion t1 t2 
+            | ((head t1) == (head t2)) = addTableToAnother (tail t2) t1
+            | otherwise = t1
 
 
 -- Task 6
