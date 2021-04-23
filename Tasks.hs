@@ -255,10 +255,21 @@ tsort :: String -> Table -> Table
 tsort = undefined
 
 
+-- Aplicam functia pe fiecare celula
+applyFunctionToCell :: (Value -> Value) -> Row -> Row
+applyFunctionToCell f r = map f r
+
+-- Iteram prin toate randurile
+applyFunctionToRow :: (Value -> Value) -> Table -> Table
+applyFunctionToRow _ [] = []
+applyFunctionToRow f (x:xs) = (applyFunctionToCell f x) : (applyFunctionToRow f xs)
+
 -- Task 3
+-- Functia prin care pastram headerul normal
+-- Si aplicam pe restul tabelului functia
 vmap :: (Value -> Value) -> Table -> Table
-vmap = undefined
---- An example use of this would be:
+vmap f t = (head t) : (applyFunctionToRow f (tail t)) 
+
 
 -- Task 4
 rmap :: (Row -> Row) -> [String] -> Table -> Table
@@ -279,8 +290,27 @@ vunion t1 t2
 
 
 -- Task 6
+
+addSpacesToListAux :: Int -> Row -> Row
+addSpacesToListAux nr x = x ++ replicate (nr - (length x)) ""
+
+
+-- Functia prin care iteram prin toate randurile
+-- si apelam functia de mai sus prin care
+-- completam cu spatii goale unde e cazul
+addSpacesToListPreAux :: Int -> Table -> Table
+addSpacesToListPreAux len [] = []
+addSpacesToListPreAux len (x:xs) = addSpacesToListAux len x : addSpacesToListPreAux len xs
+
+
+-- Functia prin care trimitem mai departe cate coloane avem in total si lista
+addSpacesToList :: Table -> Table
+addSpacesToList [] = []
+addSpacesToList t = addSpacesToListPreAux (length (head t)) t
+
+-- Functia prin care unim 2 tabele alaturate
 hunion :: Table -> Table -> Table
-hunion = undefined
+hunion t1 t2 = (head ((transpose(foldr (\x y -> x:y) (transpose t2) (transpose t1))))) : addSpacesToList(tail (transpose(foldr (\x y -> x:y) (transpose t2) (transpose t1))))
 
 
 
