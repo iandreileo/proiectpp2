@@ -10,6 +10,7 @@ module Tasks where
 import Dataset
 import Text.Printf
 import Data.List
+import Numeric
 type CSV = String
 type Value = String
 type Row = [Value]
@@ -29,13 +30,13 @@ divideFloat :: Float -> Integer -> Float
 divideFloat a b = a / (fromIntegral b)
 
 -- Auxiliar pentru stringtoint
-readInt :: String -> Integer
-readInt "" = 0
-readInt x = read x
+myReadInt :: String -> Integer
+myReadInt "" = 0
+myReadInt x = read x
 
 -- Cast de la string la int
 stringtoint :: [String] -> [Integer]
-stringtoint = map readInt
+stringtoint = map myReadInt
 
 -- Cast de la String la float
 stringtofloat :: String -> Float
@@ -97,13 +98,13 @@ get_exam_avg :: Table -> Float
 get_exam_avg t = divideFloat (sumOfGradex (compute_exam_grades t)) (toInteger(length t - 1))
 
 -- Cast de la String la Float
-readFloat :: String -> Float
-readFloat "" = 0
-readFloat x = read x
+myReadFloat :: String -> Float
+myReadFloat "" = 0
+myReadFloat x = read x
 
 -- Cast din lista de String in lista de Float
 stringtofloatlist :: [String] -> [Float]
-stringtofloatlist = map readFloat
+stringtofloatlist = map myReadFloat
 
 -- Check Homework
 -- Adunam suma notelor
@@ -225,12 +226,14 @@ write_csv (x:xs)
 -- Scriem ultima linie din csv, fara newline
 write_line_last :: Row -> CSV
 -- write_line [] = "\n"
+write_line_last [] = ""
 write_line_last (x:xs)
         | xs == [] = x
         | otherwise = x ++ "," ++ write_line_last xs
 
 -- Scriem restul liniilor din csv, cu newline la sfarsit
 write_line :: Row -> CSV
+write_line [] = ""
 -- write_line [] = "\n"
 write_line (x:xs)
         | xs == [] = x ++ "\n"
@@ -270,13 +273,22 @@ applyFunctionToRow f (x:xs) = (applyFunctionToCell f x) : (applyFunctionToRow f 
 vmap :: (Value -> Value) -> Table -> Table
 vmap f t = (head t) : (applyFunctionToRow f (tail t)) 
 
+auxRmap :: (Row -> Row) -> Table -> Table
+auxRmap f t = map f (tail t)
 
 -- Task 4
 rmap :: (Row -> Row) -> [String] -> Table -> Table
-get_hw_grade_total :: Row -> Row
-get_hw_grade_total = undefined
-rmap = undefined
+rmap f header t = header : (auxRmap f t)
 
+
+
+sumOfHw :: Row -> String
+sumOfHw [] = ""
+sumOfHw (x:xs) = printf "%.2f"((stringtofloat (sumOfHw xs)) + (stringtofloat x))
+
+get_hw_grade_total :: Row -> Row
+-- get_hw_grade_total (x:xs) = [x,(sumOfHw (tail xs))]
+get_hw_grade_total (x:xs) = [x,(printf "%.2f" (sum (tail (stringtofloatlist xs))))]
 
 
 addTableToAnother :: Table -> Table -> Table
@@ -327,10 +339,20 @@ cartesian :: (Row -> Row -> Row) -> [String] -> Table -> Table -> Table
 cartesian = undefined
 
 
-
-
+-- Functie pentru task9
+-- Prin care primi un string si un tabel transpus
+-- Si returnam randul care are pe prima celula (capul de coloana)
+-- Acel string
+getColByString :: String -> Table -> Row
+getColByString col [] = []
+getColByString col (x:xs)
+                | (head x) == col = x
+                | otherwise = getColByString col xs
 
 
 -- Task 9
+-- Iteram de fiecare data prin tabel, cautam daca headerul = string-ul primit
+-- Si formam noul tabel
 projection :: [String] -> Table -> Table
-projection = undefined
+projection [] _ = []
+projection (x:xs) t = transpose(getColByString x (transpose t) : transpose(projection xs t))
